@@ -6,6 +6,17 @@
   <title>Masuk | Monitoring IoT</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/login.css" />
+  <style>
+    /* Styling tambahan untuk memunculkan pesan error/sukses di form */
+    .form-message {
+      margin-top: 12px;
+      font-size: 0.88rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    .form-message.error { color: #ef4444; }
+    .form-message.success { color: #22c55e; }
+  </style>
 </head>
 <body class="login-body">
   <div class="login-wrapper">
@@ -51,6 +62,88 @@
     </div>
   </div>
 
-  <script type="module" src="js/auth.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Tetap mempertahankan config asli ujikom sialan lu
+    const firebaseConfig = {
+      apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+      authDomain: "ujikom-sialan.firebaseapp.com",
+      projectId: "ujikom-sialan",
+      storageBucket: "ujikom-sialan.firebasestorage.app",
+      messagingSenderId: "325398434784",
+      appId: "1:325398434784:web:e049ea6ba4ecbfb2129185"
+    };
+
+    // Inisialisasi Firebase & Auth
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginForm = document.getElementById("loginForm");
+    const loginMessage = document.getElementById("loginMessage");
+    const togglePassBtn = document.getElementById("togglePassBtn");
+    const passwordInput = document.getElementById("password");
+
+    // 1. Cek Sesi Aktif: Kalau udah login, langsung lempar ke dashboard
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "dashboard.html";
+      }
+    });
+
+    // 2. Fungsi Lihat/Sembunyikan Password (Toggle Pass)
+    if (togglePassBtn && passwordInput) {
+      togglePassBtn.addEventListener("click", () => {
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          togglePassBtn.textContent = "🙈";
+        } else {
+          passwordInput.type = "password";
+          togglePassBtn.textContent = "👁️";
+        }
+      });
+    }
+
+    // 3. Proses Validasi Form Login ke Firebase
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById("email").value;
+        const password = passwordInput.value;
+
+        // Reset text pesan informasi
+        loginMessage.textContent = "Sedang memeriksa...";
+        loginMessage.className = "form-message";
+
+        try {
+          // Kirim data ke Firebase Auth
+          await signInWithEmailAndPassword(auth, email, password);
+          
+          loginMessage.textContent = "Masuk berhasil! Mengalihkan...";
+          loginMessage.className = "form-message success";
+          
+          // Sukses? Eksekusi ganti halaman langsung ke dashboard
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 1000);
+
+        } catch (error) {
+          console.error("Error login:", error.code);
+          loginMessage.className = "form-message error";
+          
+          // Mengubah pesan error Firebase bawaan menjadi bahasa Indonesia yang mudah dimengerti
+          if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+            loginMessage.textContent = "Email atau password salah, Puh.";
+          } else if (error.code === "auth/invalid-email") {
+            loginMessage.textContent = "Format email lu salah.";
+          } else {
+            loginMessage.textContent = "Gagal masuk: " + error.message;
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>

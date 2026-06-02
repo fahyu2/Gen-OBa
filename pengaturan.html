@@ -256,17 +256,18 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // Gunakan konfigurasi asli Firebase "ujikom sialan" lu
-   const firebaseConfig = {
-  apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
-  authDomain: "ujikom-sialan.firebaseapp.com",
-  databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ujikom-sialan",
-  storageBucket: "ujikom-sialan.firebasestorage.app",
-  messagingSenderId: "325398434784",
-  appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
-  measurementId: "G-QFENYKLC95"
-};
+    // Mempertahankan config asli ujikom-sialan lu
+    const firebaseConfig = {
+      apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+      authDomain: "ujikom-sialan.firebaseapp.com",
+      databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ujikom-sialan",
+      storageBucket: "ujikom-sialan.firebasestorage.app",
+      messagingSenderId: "325398434784",
+      appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
+      measurementId: "G-QFENYKLC95"
+    };
+
     // Inisialisasi Firebase & Auth
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -274,18 +275,14 @@
     // 1. Proteksi Sesi Login & Inisialisasi Data User
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        // Blokir halaman jika belum login
         window.location.href = "login.html";
       } else {
-        // Tempel email asli user ke field input email
         document.getElementById("userEmail").value = user.email || "";
         
-        // Load Nama Tampilan jika ada di database profil Firebase
         if (user.displayName) {
           document.getElementById("displayName").value = user.displayName;
         }
 
-        // Set huruf inisial avatar kanan atas dinamis
         const avatarEl = document.getElementById("userAvatar");
         if (avatarEl && user.email) {
           avatarEl.textContent = user.email.charAt(0).toUpperCase();
@@ -301,10 +298,7 @@
       
       if (auth.currentUser) {
         try {
-          // Kirim data update nama ke Firebase Auth Server
           await updateProfile(auth.currentUser, { displayName: nameInput });
-          
-          // Tampilkan alert sukses
           alertBox.style.display = 'block';
           setTimeout(() => alertBox.style.display = 'none', 3000);
         } catch (error) {
@@ -321,7 +315,6 @@
         e.preventDefault();
         try {
           await signOut(auth);
-          // Redirection dihandle otomatis oleh onAuthStateChanged
         } catch (error) {
           console.error("Gagal logout:", error);
         }
