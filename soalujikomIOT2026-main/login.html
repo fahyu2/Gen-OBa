@@ -50,28 +50,3 @@
 
   <script type="module" src="js/auth.js"></script>
 </body>
-</html>
-
-<form id="loginForm">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button type="submit">Masuk</button>
-</form>
-
-<script>
-document.getElementById("loginForm").addEventListener("submit", function(e){
-    e.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    if(email && password){
-        localStorage.setItem("isLogin", "true");
-        localStorage.setItem("userEmail", email);
-
-        window.location.href = "dashboard.html";
-    } else {
-        alert("Isi email dan password terlebih dahulu!");
-    }
-});
-</script>
