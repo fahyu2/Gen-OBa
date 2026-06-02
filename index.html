@@ -6,23 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Monitoring IoT | Smart Realtime Dashboard</title>
 
-  <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/stylee.css" />
+  
+  <style>
+    /* Tambahan inline style dikit biar tema Hitam + Hijau Tua langsung nge-lock tanpa merusak file CSS lu */
+    :root {
+      --bg-dark: #070b12;
+      --hijau-tua: #16a34a;
+      --hijau-accent: #15803d;
+      --text-main: #f8fafc;
+    }
+    .gradient-text {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+    .btn-primary {
+      background: linear-gradient(135deg, var(--hijau-tua), var(--hijau-accent)) !important;
+      border: none !important;
+      color: #fff !important;
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.2);
+      transition: 0.3s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(22, 163, 74, 0.35);
+    }
+    .badge {
+      background: rgba(22, 163, 74, 0.1) !important;
+      color: #22c55e !important;
+      border: 1px solid rgba(22, 163, 74, 0.2) !important;
+    }
+    .pulse {
+      background: #22c55e !important;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: pulse-green 2s infinite;
+    }
+    @keyframes pulse-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+  </style>
 </head>
 
 <body>
 
-  <!-- NAVBAR -->
   <header class="navbar">
     <div class="container nav-container">
 
       <a href="#" class="logo">
-        <img src="img/logo.png" alt="">
+        <img src="img/logo.png" alt="Logo">
         <span>Monitoring<strong>IoT</strong></span>
       </a>
 
@@ -40,22 +79,18 @@
     </div>
   </header>
 
-  <!-- HERO -->
   <section class="hero">
-
     <div class="container hero-content">
 
       <div class="hero-text">
-
         <span class="badge">
           🚀 Firebase • ESP32 • Monitoring Realtime
         </span>
 
         <h1>
           Dashboard Monitoring
-          <span class="gradient-text">
-            Modern & Realtime
-          </span>
+          <br>
+          <span class="gradient-text">Modern & Realtime</span>
         </h1>
 
         <p>
@@ -67,149 +102,146 @@
           <a href="login.html" class="btn btn-primary">
             Mulai Sekarang
           </a>
-
           <a href="#features" class="btn btn-outline">
             Lihat Fitur
           </a>
         </div>
-
       </div>
 
-      <!-- VISUAL -->
       <div class="dashboard-box">
-
         <div class="dashboard-top">
           <h3>Realtime Monitoring</h3>
-
           <div class="status">
             <div class="pulse"></div>
             Online
           </div>
         </div>
 
-        <div class="chart"></div>
+        <div class="chart">
+          </div>
 
         <div class="cards">
-
           <div class="mini-card">
             <small>Suhu</small>
-            <h2>27°C</h2>
+            <h2 style="color: #22c55e;">27°C</h2>
           </div>
 
           <div class="mini-card">
-            <small>Kelembapan</small>
-            <h2>76%</h2>
+            <small>Cahaya</small>
+            <h2 style="color: #eab308;">450 lx</h2>
           </div>
 
           <div class="mini-card">
             <small>Status Sensor</small>
-            <h2>Aktif</h2>
+            <h2 style="color: #22c55e;">Aktif</h2>
           </div>
 
           <div class="mini-card">
             <small>Perangkat</small>
-            <h2>12</h2>
+            <h2>ESP32</h2>
           </div>
-
         </div>
-
       </div>
 
     </div>
-
   </section>
 
-  <!-- FEATURES -->
   <section id="features">
-
     <div class="container">
 
       <div class="section-header">
         <h2>Fitur Unggulan</h2>
-        <p>
-          Dibuat untuk sistem monitoring IoT modern
-        </p>
+        <p>Dibuat untuk sistem monitoring IoT modern tingkat lanjut</p>
       </div>
 
       <div class="features-grid">
-
         <div class="feature-card">
-          <div class="feature-icon">⚡</div>
+          <div class="feature-icon" style="color: #22c55e;">⚡</div>
           <h3>Realtime Firebase</h3>
-          <p>
-            Data langsung diperbarui secara realtime menggunakan Firebase Realtime Database.
-          </p>
+          <p>Data langsung diperbarui secara realtime menggunakan Firebase Realtime Database tanpa perlu reload halaman.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">📊</div>
+          <div class="feature-icon" style="color: #22c55e;">📊</div>
           <h3>Grafik Interaktif</h3>
-          <p>
-            Monitoring data sensor lebih mudah dengan visualisasi modern dan responsif.
-          </p>
+          <p>Monitoring tren data sensor jadi lebih mudah dengan visualisasi grafik yang modern, presisi, dan responsif.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">🔒</div>
+          <div class="feature-icon" style="color: #22c55e;">🔒</div>
           <h3>Keamanan Data</h3>
-          <p>
-            Sistem login aman menggunakan Firebase Authentication.
-          </p>
+          <p>Sistem otentikasi pintu masuk dashboard aman berlapis menggunakan Firebase Authentication.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">📱</div>
+          <div class="feature-icon" style="color: #22c55e;">📱</div>
           <h3>Mobile Friendly</h3>
-          <p>
-            Tampilan otomatis menyesuaikan di HP, tablet, maupun desktop.
-          </p>
+          <p>Tampilan fleksibel dan otomatis menyesuaikan dengan sempurna baik di layar HP, tablet, maupun desktop.</p>
         </div>
-
       </div>
 
     </div>
-
   </section>
 
-  <!-- ABOUT -->
   <section id="about" class="about">
-
     <div class="container about-grid">
 
       <div>
-
         <h2>Tentang Platform</h2>
-
         <p>
-          Sistem ini dirancang untuk mempermudah monitoring perangkat IoT
-          seperti ESP32 dan ESP8266 secara realtime dengan dashboard modern,
-          ringan, dan mudah digunakan.
+          Sistem ini dirancang khusus untuk mempermudah monitoring kendali perangkat IoT
+          seperti mikrokontroler ESP32 secara realtime dengan rancangan interface dashboard yang modern, ringan, dan cepat.
         </p>
 
         <ul class="check-list">
-          <li>✔ Integrasi mudah dengan ESP32 / ESP8266</li>
-          <li>✔ Mendukung banyak sensor</li>
-          <li>✔ Dashboard modern & elegan</li>
-          <li>✔ Sinkronisasi realtime</li>
+          <li><span style="color: #22c55e;">✔</span> Integrasi mudah dengan ESP32 / ESP8266</li>
+          <li><span style="color: #22c55e;">✔</span> Sistem pembacaan multi-sensor (Suhu & Cahaya)</li>
+          <li><span style="color: #22c55e;">✔</span> Dashboard bernuansa Dark Elegant & Cyber Green</li>
+          <li><span style="color: #22c55e;">✔</span> Sinkronisasi data super cepat dari Firebase</li>
         </ul>
-
       </div>
 
       <div class="about-img">
-        <img src="img/background.jpg" alt="">
+        <img src="img/background.jpg" alt="IoT Background">
       </div>
 
     </div>
-
   </section>
 
-  <!-- FOOTER -->
   <footer>
     <div class="container">
-      © 2026 Monitoring IoT Dashboard ujikom 2026/2027
+      © 2026 Monitoring IoT Dashboard • Project Ujikom 2026/2027
     </div>
   </footer>
 
-</body>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+    // Tempel Firebase Config "ujikom sialan" lu di sini
+   const firebaseConfig = {
+  apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+  authDomain: "ujikom-sialan.firebaseapp.com",
+  databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ujikom-sialan",
+  storageBucket: "ujikom-sialan.firebasestorage.app",
+  messagingSenderId: "325398434784",
+  appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
+  measurementId: "G-QFENYKLC95"
+};
+
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Deteksi Session aktif pasif
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Kalo terdeteksi udah pernah login sebelumnya, langsung lempar ke dashboard tanpa permisi
+        window.location.href = "dashboard.html";
+      }
+    });
+  </script>
+
+</body>
 </html>

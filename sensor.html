@@ -7,10 +7,25 @@
   <meta name="description" content="Halaman monitoring data sensor realtime dari semua perangkat IoT yang terhubung." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    /* Mengunci variabel tema utama (Hitam Elegan + Hijau) agar konsisten */
+    :root {
+      --primary: #16a34a;
+      --primary-hover: #15803d;
+    }
+    .badge-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-pill.ok   { background: #dcfce7; color: #15803d; }
+    .badge-pill.warn { background: #fef9c3; color: #a16207; }
+    .badge-pill.err  { background: #fee2e2; color: #b91c1c; }
+  </style>
 </head>
 <body>
   <div class="app-shell">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <img src="img/logo.png" alt="Logo" />
@@ -25,7 +40,6 @@
       </nav>
     </aside>
 
-    <!-- Main -->
     <main class="main">
       <header class="topbar">
         <div>
@@ -34,26 +48,15 @@
         </div>
         <div class="topbar-actions">
           <div class="status-pill"><span class="dot online"></span> Terhubung</div>
-          <div class="avatar">U</div>
+          <div class="avatar" id="userAvatar">U</div>
         </div>
       </header>
 
-      <!-- Sensor Cards Grid -->
-      <section class="stats-grid">
+      <section class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
         <div class="stat-card gradient-1">
           <small>Suhu</small>
           <h2 id="statSuhu">--°C</h2>
           <span class="trend up">↑ Stabil</span>
-        </div>
-        <div class="stat-card gradient-2">
-          <small>Kelembapan</small>
-          <h2 id="statKelembapan">--%</h2>
-          <span class="trend up">↑ Normal</span>
-        </div>
-        <div class="stat-card gradient-3">
-          <small>Tekanan</small>
-          <h2 id="statTekanan">-- hPa</h2>
-          <span class="trend down">↓ Turun tipis</span>
         </div>
         <div class="stat-card gradient-4">
           <small>Cahaya</small>
@@ -62,11 +65,10 @@
         </div>
       </section>
 
-      <!-- Daftar Sensor -->
       <section class="panel">
         <div class="panel-header">
           <h3>Daftar Perangkat Sensor</h3>
-          <span class="badge-pill ok" id="sensorCount">Memuat...</span>
+          <span class="badge-pill ok" id="sensorCount">0 Sensor</span>
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -88,38 +90,87 @@
     </main>
   </div>
 
-  <script type="module" src="js/dashboard.js"></script>
-  <script>
-    // Isi tabel sensor dari data dummy / Firebase
-    function populateSensorTable(data) {
-      const tbody = document.getElementById('sensorTable');
-      const now = new Date().toLocaleTimeString('id-ID');
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Gunakan konfigurasi asli Firebase "ujikom sialan" lu
+    const firebaseConfig = {
+  apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+  authDomain: "ujikom-sialan.firebaseapp.com",
+  databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ujikom-sialan",
+  storageBucket: "ujikom-sialan.firebasestorage.app",
+  messagingSenderId: "325398434784",
+  appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
+  measurementId: "G-QFENYKLC95"
+};
+
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 1. Proteksi Halaman & Handler Avatar Sesi
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Belum login? Tendang kembali ke login.html
+        window.location.href = "login.html";
+      } else {
+        // Sukses login? Set avatar dinamis huruf depan email
+        const avatarEl = document.getElementById("userAvatar");
+        if (avatarEl && user.email) {
+          avatarEl.textContent = user.email.charAt(0).toUpperCase();
+        }
+        // Nyalakan pemuatan data sensor
+        initSensorPage();
+      }
+    });
+
+    // 2. Logika Tombol Keluar (Logout)
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await signOut(auth);
+        } catch (error) {
+          console.error("Gagal logout:", error);
+        }
+      });
+    }
+
+    // 3. Populasi Data Realtime / Mock Data sewarna tema
+    function initSensorPage() {
+      // Data penampung sementara agar halaman langsung terisi rapi sewaktu di-load
+      const rawData = { suhu: 28.5, cahaya: 450 };
+
+      // Isi nilai ke dalam Card atas
+      document.getElementById('statSuhu').textContent = rawData.suhu + '°C';
+      document.getElementById('statCahaya').textContent = rawData.cahaya + ' lx';
+
+      // Bentuk baris tabel sensor sesuai data IoT lu
+      const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const sensors = [
-        { perangkat: 'ESP32 - Ruang 1', tipe: 'DHT22', nilai: `${data.suhu ?? '--'}°C / ${data.kelembapan ?? '--'}%`, status: 'OK' },
-        { perangkat: 'ESP32 - Ruang 2', tipe: 'BMP280', nilai: `${data.tekanan ?? '--'} hPa`, status: 'OK' },
-        { perangkat: 'ESP8266 - Outdoor', tipe: 'LDR', nilai: `${data.cahaya ?? '--'} lx`, status: 'OK' },
-        { perangkat: 'ESP32 - Pintu', tipe: 'PIR', nilai: 'Offline', status: 'ERR' },
+        { perangkat: 'ESP32 - Master Node', tipe: 'DHT22 (Internal)', nilai: `${rawData.suhu} °C`, status: 'OK' },
+        { perangkat: 'ESP32 - Outdoor Node', tipe: 'LDR (Lux Meter)', nilai: `${rawData.cahaya} lx`, status: 'OK' },
+        { perangkat: 'ESP32 - Cadangan', tipe: 'Sensor Aux', nilai: 'Offline', status: 'WARN' }
       ];
+
+      // Update badge counter di panel header
       document.getElementById('sensorCount').textContent = `${sensors.length} Sensor`;
+
+      // Render baris ke dalam tabel HTML
+      const tbody = document.getElementById('sensorTable');
       tbody.innerHTML = sensors.map(s => `
         <tr>
-          <td>${s.perangkat}</td>
-          <td>${s.tipe}</td>
+          <td><strong>${s.perangkat}</strong></td>
+          <td><span style="color:var(--muted); font-size:0.9rem">${s.tipe}</span></td>
           <td>${s.nilai}</td>
-          <td>${now}</td>
-          <td><span class="badge-pill ${s.status === 'OK' ? 'ok' : 'err'}">${s.status}</span></td>
+          <td>${s.status === 'OK' ? now : '--:--:--'}</td>
+          <td><span class="badge-pill ${s.status === 'OK' ? 'ok' : 'warn'}">${s.status}</span></td>
         </tr>
       `).join('');
     }
-
-    // Load dummy data sebagai fallback
-    fetch('data/dummy.json').then(r => r.json()).then(data => {
-      populateSensorTable(data);
-      document.getElementById('statSuhu').textContent = (data.suhu ?? '--') + '°C';
-      document.getElementById('statKelembapan').textContent = (data.kelembapan ?? '--') + '%';
-      document.getElementById('statTekanan').textContent = (data.tekanan ?? '--') + ' hPa';
-      document.getElementById('statCahaya').textContent = (data.cahaya ?? '--') + ' lx';
-    }).catch(() => {});
   </script>
 </body>
 </html>

@@ -7,11 +7,28 @@
   <meta name="description" content="Riwayat lengkap data sensor IoT. Filter dan unduh data historis untuk analisis." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* Menyelaraskan warna primer hijau sesuai tema login & dashboard */
+    :root {
+      --primary: #16a34a;
+      --primary-hover: #15803d;
+    }
+    .badge-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-pill.ok   { background: #dcfce7; color: #15803d; }
+    .badge-pill.warn { background: #fef9c3; color: #a16207; }
+    .badge-pill.err  { background: #fee2e2; color: #b91c1c; }
+  </style>
 </head>
 <body>
   <div class="app-shell">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <img src="img/logo.png" alt="Logo" />
@@ -26,7 +43,6 @@
       </nav>
     </aside>
 
-    <!-- Main -->
     <main class="main">
       <header class="topbar">
         <div>
@@ -35,22 +51,20 @@
         </div>
         <div class="topbar-actions">
           <div class="status-pill"><span class="dot online"></span> Terhubung</div>
-          <div class="avatar">U</div>
+          <div class="avatar" id="userAvatar">U</div>
         </div>
       </header>
 
-      <!-- Filter -->
       <section class="panel" style="padding: 16px 20px;">
         <div class="panel-header" style="flex-wrap:wrap;gap:12px;">
           <h3>Filter Data</h3>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <select id="filterSensor" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+            <select id="filterSensor" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;">
               <option value="all">Semua Sensor</option>
-              <option value="dht22">DHT22 (Suhu/Kelembapan)</option>
-              <option value="bmp280">BMP280 (Tekanan)</option>
-              <option value="ldr">LDR (Cahaya)</option>
+              <option value="suhu">Sensor Suhu (°C)</option>
+              <option value="cahaya">Sensor Cahaya (lx)</option>
             </select>
-            <select id="filterRange" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+            <select id="filterRange" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;">
               <option>24 Jam Terakhir</option>
               <option>7 Hari</option>
               <option>30 Hari</option>
@@ -59,7 +73,6 @@
         </div>
       </section>
 
-      <!-- Chart -->
       <section class="panel">
         <div class="panel-header">
           <h3>Grafik Riwayat Sensor</h3>
@@ -67,7 +80,6 @@
         <canvas id="historyChart" height="110"></canvas>
       </section>
 
-      <!-- Tabel Riwayat -->
       <section class="panel">
         <div class="panel-header">
           <h3>Log Data Sensor</h3>
@@ -92,58 +104,123 @@
     </main>
   </div>
 
-  <script type="module" src="js/dashboard.js"></script>
-  <script>
-    // Render chart riwayat
-    fetch('data/dummy.json').then(r => r.json()).then(data => {
-      // Chart
-      const ctx = document.getElementById('historyChart');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: data.chart?.labels || [],
-          datasets: [
-            {
-              label: 'Suhu (°C)',
-              data: data.chart?.suhu || [],
-              borderColor: '#4f46e5',
-              backgroundColor: 'rgba(79,70,229,.1)',
-              fill: true, tension: .4, borderWidth: 2, pointRadius: 4
-            },
-            {
-              label: 'Kelembapan (%)',
-              data: data.chart?.kelembapan || [],
-              borderColor: '#06b6d4',
-              backgroundColor: 'rgba(6,182,212,.08)',
-              fill: true, tension: .4, borderWidth: 2, pointRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, padding: 20 } },
-            tooltip: { backgroundColor: 'rgba(15,23,42,0.9)', titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 12, cornerRadius: 8 }
-          },
-          scales: {
-            y: { grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-          }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Gunakan konfigurasi asli Firebase "ujikom sialan" lu
+   const firebaseConfig = {
+  apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+  authDomain: "ujikom-sialan.firebaseapp.com",
+  databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ujikom-sialan",
+  storageBucket: "ujikom-sialan.firebasestorage.app",
+  messagingSenderId: "325398434784",
+  appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
+  measurementId: "G-QFENYKLC95"
+};
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 1. Proteksi Halaman & Handler Avatar Sesi
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Belum login? Tendang balik ke pintu depan
+        window.location.href = "login.html";
+      } else {
+        // Sukses login? Set avatar dinamis
+        const avatarEl = document.getElementById("userAvatar");
+        if (avatarEl && user.email) {
+          avatarEl.textContent = user.email.charAt(0).toUpperCase();
+        }
+        // Jalankan render dashboard riwayat
+        initRiwayatSistem();
+      }
+    });
+
+    // 2. Logika Tombol Keluar (Logout)
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await signOut(auth);
+        } catch (error) {
+          console.error("Gagal logout:", error);
         }
       });
+    }
 
-      // Tabel
-      const rows = data.history || [];
+    // 3. Render Logika Grafik & Tabel Riwayat (Mock data terintegrasi sewarna tema)
+    function initRiwayatSistem() {
+      // Dummy data internal pengganti dummy.json biar gak error 404 pas di-load langsung
+      const mockData = {
+        chart: {
+          labels: ["02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00"],
+          suhu: [26.5, 25.8, 24.2, 27.1, 29.5, 31.2, 30.8],
+          cahaya: [20, 20, 150, 420, 680, 850, 790]
+        },
+        history: [
+          { waktu: "2026-06-02 12:00:22", sensor: "Suhu", nilai: "31.2 °C", status: "OK" },
+          { waktu: "2026-06-02 12:00:22", sensor: "Cahaya", nilai: "850 lx", status: "OK" },
+          { waktu: "2026-06-02 10:00:15", sensor: "Suhu", nilai: "29.5 °C", status: "OK" },
+          { waktu: "2026-06-02 10:00:15", sensor: "Cahaya", nilai: "680 lx", status: "OK" },
+          { waktu: "2026-06-02 08:00:02", sensor: "Suhu", nilai: "35.6 °C", status: "WARN" },
+          { status: "ERR", waktu: "2026-06-02 06:00:00", sensor: "Cahaya", nilai: "0 lx" }
+        ]
+      };
+
+      // Inisialisasi Chart.js dengan warna tema hijau & kuning amber
+      const ctx = document.getElementById('historyChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: mockData.chart.labels,
+            datasets: [
+              {
+                label: 'Suhu (°C)',
+                data: mockData.chart.suhu,
+                borderColor: '#22c55e',          // Hijau Utama
+                backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4
+              },
+              {
+                label: 'Cahaya (lx)',
+                data: mockData.chart.cahaya,
+                borderColor: '#eab308',          // Kuning Cerah (Matching sama Dashboard)
+                backgroundColor: 'rgba(234, 179, 8, 0.05)',
+                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, padding: 20 } },
+              tooltip: { backgroundColor: 'rgba(15,23,42,0.9)', titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 12, cornerRadius: 8 }
+            },
+            scales: {
+              y: { grid: { color: 'rgba(148,163,184,0.06)' }, ticks: { color: '#94a3b8' } },
+              x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+          }
+        });
+      }
+
+      // Render data ke baris tabel
+      const rows = mockData.history;
       document.getElementById('rowCount').textContent = `${rows.length} entri`;
       document.getElementById('historyTable').innerHTML = rows.map(r => `
         <tr>
           <td>${r.waktu}</td>
-          <td>${r.sensor}</td>
+          <td><strong>${r.sensor}</strong></td>
           <td>${r.nilai}</td>
           <td><span class="badge-pill ${r.status === 'OK' ? 'ok' : r.status === 'WARN' ? 'warn' : 'err'}">${r.status}</span></td>
         </tr>
       `).join('');
-    }).catch(() => {});
+    }
   </script>
 </body>
 </html>

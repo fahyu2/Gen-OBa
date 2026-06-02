@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
   <style>
+    /* Mengunci variabel tema utama (Hitam Elegan + Hijau) agar konsisten */
+    :root {
+      --primary: #16a34a;
+      --primary-hover: #15803d;
+      --success: #22c55e;
+    }
     .settings-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -52,6 +58,8 @@
     .toggle-switch:last-child { border-bottom: none; }
     .toggle-switch span { font-size: 0.95rem; }
     .toggle-switch small { color: var(--muted); font-size: 0.8rem; display: block; }
+    
+    /* Custom style toggle switch sewarna tema hijau */
     .switch {
       position: relative;
       display: inline-block;
@@ -77,14 +85,28 @@
     }
     .switch input:checked + .slider { background: var(--primary); }
     .switch input:checked + .slider:before { transform: translateX(20px); }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
     .save-btn {
       margin-top: 8px;
     }
     .alert-success {
       display: none;
-      background: rgba(16,185,129,0.1);
-      border: 1px solid rgba(16,185,129,0.3);
-      color: #10b981;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
       padding: 10px 16px;
       border-radius: 10px;
       font-size: 0.9rem;
@@ -94,7 +116,6 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <img src="img/logo.png" alt="Logo" />
@@ -109,7 +130,6 @@
       </nav>
     </aside>
 
-    <!-- Main -->
     <main class="main">
       <header class="topbar">
         <div>
@@ -118,12 +138,11 @@
         </div>
         <div class="topbar-actions">
           <div class="status-pill"><span class="dot online"></span> Terhubung</div>
-          <div class="avatar">U</div>
+          <div class="avatar" id="userAvatar">U</div>
         </div>
       </header>
 
       <div class="settings-grid">
-        <!-- Profil -->
         <section class="panel">
           <div class="panel-header">
             <h3>👤 Profil Akun</h3>
@@ -150,7 +169,6 @@
           </form>
         </section>
 
-        <!-- Notifikasi -->
         <section class="panel">
           <div class="panel-header">
             <h3>🔔 Notifikasi</h3>
@@ -189,7 +207,6 @@
           </div>
         </section>
 
-        <!-- Ambang Batas Sensor -->
         <section class="panel">
           <div class="panel-header">
             <h3>⚠️ Ambang Batas Sensor</h3>
@@ -200,10 +217,6 @@
               <input type="number" id="maxSuhu" value="35" min="20" max="60" />
             </div>
             <div class="form-field">
-              <label>Kelembapan Minimum (%)</label>
-              <input type="number" id="minKelembapan" value="40" min="10" max="90" />
-            </div>
-            <div class="form-field">
               <label>Cahaya Minimum (lx)</label>
               <input type="number" id="minCahaya" value="100" min="0" max="2000" />
             </div>
@@ -212,7 +225,6 @@
           </form>
         </section>
 
-        <!-- Info Sistem -->
         <section class="panel">
           <div class="panel-header">
             <h3>ℹ️ Informasi Sistem</h3>
@@ -224,7 +236,7 @@
             </div>
             <div class="toggle-switch">
               <span>Firebase SDK</span>
-              <span style="color:var(--muted)">v10.12.0</span>
+              <span style="color:var(--muted)">v10.8.0</span>
             </div>
             <div class="toggle-switch">
               <span>Status Database</span>
@@ -232,7 +244,7 @@
             </div>
             <div class="toggle-switch">
               <span>Sensor Aktif</span>
-              <span style="color:var(--muted)" id="activeSensors">3 dari 4</span>
+              <span style="color:var(--muted)" id="activeSensors">2 dari 2</span>
             </div>
           </div>
         </section>
@@ -240,35 +252,99 @@
     </main>
   </div>
 
-  <script type="module" src="js/dashboard.js"></script>
-  <script>
-    // Form Profil
-    document.getElementById('profileForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const alert = document.getElementById('profileAlert');
-      alert.style.display = 'block';
-      setTimeout(() => alert.style.display = 'none', 3000);
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Gunakan konfigurasi asli Firebase "ujikom sialan" lu
+   const firebaseConfig = {
+  apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
+  authDomain: "ujikom-sialan.firebaseapp.com",
+  databaseURL: "https://ujikom-sialan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ujikom-sialan",
+  storageBucket: "ujikom-sialan.firebasestorage.app",
+  messagingSenderId: "325398434784",
+  appId: "1:325398434784:web:e049ea6ba4ecbfb2129185",
+  measurementId: "G-QFENYKLC95"
+};
+    // Inisialisasi Firebase & Auth
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 1. Proteksi Sesi Login & Inisialisasi Data User
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Blokir halaman jika belum login
+        window.location.href = "login.html";
+      } else {
+        // Tempel email asli user ke field input email
+        document.getElementById("userEmail").value = user.email || "";
+        
+        // Load Nama Tampilan jika ada di database profil Firebase
+        if (user.displayName) {
+          document.getElementById("displayName").value = user.displayName;
+        }
+
+        // Set huruf inisial avatar kanan atas dinamis
+        const avatarEl = document.getElementById("userAvatar");
+        if (avatarEl && user.email) {
+          avatarEl.textContent = user.email.charAt(0).toUpperCase();
+        }
+      }
     });
 
-    // Form Ambang Batas
+    // 2. Event Handler Simpan Perubahan Profil (Firebase Auth Update)
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('profileAlert');
+      const nameInput = document.getElementById('displayName').value.trim();
+      
+      if (auth.currentUser) {
+        try {
+          // Kirim data update nama ke Firebase Auth Server
+          await updateProfile(auth.currentUser, { displayName: nameInput });
+          
+          // Tampilkan alert sukses
+          alertBox.style.display = 'block';
+          setTimeout(() => alertBox.style.display = 'none', 3000);
+        } catch (error) {
+          console.error("Gagal memperbarui profil:", error);
+          alert("Gagal menyimpan profil.");
+        }
+      }
+    });
+
+    // 3. Event Handler Logout
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await signOut(auth);
+          // Redirection dihandle otomatis oleh onAuthStateChanged
+        } catch (error) {
+          console.error("Gagal logout:", error);
+        }
+      });
+    }
+
+    // 4. Form Ambang Batas Logika Lokal (LocalStorage)
     document.getElementById('thresholdForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const alert = document.getElementById('thresholdAlert');
-      // Simpan ke localStorage
+      const alertBox = document.getElementById('thresholdAlert');
+      
       localStorage.setItem('threshold_suhu', document.getElementById('maxSuhu').value);
-      localStorage.setItem('threshold_kelembapan', document.getElementById('minKelembapan').value);
       localStorage.setItem('threshold_cahaya', document.getElementById('minCahaya').value);
-      alert.style.display = 'block';
-      setTimeout(() => alert.style.display = 'none', 3000);
+      
+      alertBox.style.display = 'block';
+      setTimeout(() => alertBox.style.display = 'none', 3000);
     });
 
-    // Load saved settings
+    // Ambil data ambang batas yang tersimpan saat pertama kali dokumen siap
     document.addEventListener('DOMContentLoaded', () => {
       const suhu = localStorage.getItem('threshold_suhu');
-      const kelembapan = localStorage.getItem('threshold_kelembapan');
       const cahaya = localStorage.getItem('threshold_cahaya');
       if (suhu) document.getElementById('maxSuhu').value = suhu;
-      if (kelembapan) document.getElementById('minKelembapan').value = kelembapan;
       if (cahaya) document.getElementById('minCahaya').value = cahaya;
     });
   </script>
