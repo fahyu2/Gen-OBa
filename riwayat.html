@@ -59,10 +59,11 @@
         <div class="panel-header" style="flex-wrap:wrap;gap:12px;">
           <h3>Filter Data</h3>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <!-- Dropdown dengan indikator warna -->
             <select id="filterSensor" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;">
               <option value="all">Semua Sensor</option>
-              <option value="suhu">Sensor Suhu (°C)</option>
-              <option value="cahaya">Sensor Cahaya (lx)</option>
+              <option value="suhu">🟢 Sensor Suhu (°C)</option>
+              <option value="cahaya">🟡 Sensor Cahaya (lx)</option>
             </select>
             <select id="filterRange" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;">
               <option>24 Jam Terakhir</option>
@@ -165,31 +166,33 @@
           { waktu: "2026-06-02 10:00:15", sensor: "Suhu", nilai: "29.5 °C", status: "OK" },
           { waktu: "2026-06-02 10:00:15", sensor: "Cahaya", nilai: "680 lx", status: "OK" },
           { waktu: "2026-06-02 08:00:02", sensor: "Suhu", nilai: "35.6 °C", status: "WARN" },
-          { status: "ERR", waktu: "2026-06-02 06:00:00", sensor: "Cahaya", nilai: "0 lx" }
+          { waktu: "2026-06-02 06:00:00", sensor: "Cahaya", nilai: "0 lx", status: "ERR" }
         ]
       };
 
       // Inisialisasi Chart.js
       const ctx = document.getElementById('historyChart');
+      let historyChartInstance = null;
+      
       if (ctx) {
-        new Chart(ctx, {
+        historyChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
             labels: mockData.chart.labels,
             datasets: [
               {
-                label: 'Suhu (°C)',
+                label: '🟢 Suhu (°C)',
                 data: mockData.chart.suhu,
                 borderColor: '#22c55e',          // Hijau Utama
                 backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4
+                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4, hidden: false
               },
               {
-                label: 'Cahaya (lx)',
+                label: '🟡 Cahaya (lx)',
                 data: mockData.chart.cahaya,
                 borderColor: '#eab308',          // Kuning Cerah
                 backgroundColor: 'rgba(234, 179, 8, 0.05)',
-                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4
+                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4, hidden: false
               }
             ]
           },
@@ -207,17 +210,55 @@
         });
       }
 
-      // Render data ke baris tabel secara dinamis
-      const rows = mockData.history;
-      document.getElementById('rowCount').textContent = `${rows.length} entri`;
-      document.getElementById('historyTable').innerHTML = rows.map(r => `
-        <tr>
-          <td>${r.waktu}</td>
-          <td><strong>${r.sensor}</strong></td>
-          <td>${r.nilai}</td>
-          <td><span class="badge-pill ${r.status === 'OK' ? 'ok' : r.status === 'WARN' ? 'warn' : 'err'}">${r.status}</span></td>
-        </tr>
-      `).join('');
+      // Fungsi untuk merender ulang Tabel berdasarkan filter
+      const renderTable = (filterValue) => {
+        let filteredRows = mockData.history;
+        
+        if (filterValue === 'suhu') {
+          filteredRows = mockData.history.filter(r => r.sensor === 'Suhu');
+        } else if (filterValue === 'cahaya') {
+          filteredRows = mockData.history.filter(r => r.sensor === 'Cahaya');
+        }
+
+        document.getElementById('rowCount').textContent = `${filteredRows.length} entri`;
+        document.getElementById('historyTable').innerHTML = filteredRows.map(r => `
+          <tr>
+            <td>${r.waktu}</td>
+            <td><strong>${r.sensor}</strong></td>
+            <td>${r.nilai}</td>
+            <td><span class="badge-pill ${r.status === 'OK' ? 'ok' : r.status === 'WARN' ? 'warn' : 'err'}">${r.status}</span></td>
+          </tr>
+        `).join('');
+      };
+
+      // Event Listener untuk Filter Sensor
+      const filterSensor = document.getElementById('filterSensor');
+      if (filterSensor) {
+        filterSensor.addEventListener('change', (e) => {
+          const val = e.target.value;
+          
+          // Update Grafik (hide/show dataset)
+          if (historyChartInstance) {
+            if (val === 'all') {
+              historyChartInstance.data.datasets[0].hidden = false;
+              historyChartInstance.data.datasets[1].hidden = false;
+            } else if (val === 'suhu') {
+              historyChartInstance.data.datasets[0].hidden = false;
+              historyChartInstance.data.datasets[1].hidden = true;
+            } else if (val === 'cahaya') {
+              historyChartInstance.data.datasets[0].hidden = true;
+              historyChartInstance.data.datasets[1].hidden = false;
+            }
+            historyChartInstance.update();
+          }
+
+          // Update Tabel
+          renderTable(val);
+        });
+      }
+
+      // Render default saat pertama kali load
+      renderTable('all');
     }
   </script>
 </body>
