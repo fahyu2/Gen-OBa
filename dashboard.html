@@ -137,7 +137,9 @@
           <h3>⚡ Kontrol Relay</h3>
           <span class="muted" style="font-size:0.82rem">Klik toggle untuk nyalakan/matikan perangkat</span>
         </div>
-        <div style="display:flex;align-items:center;gap:20px;padding:16px 0;">
+        
+        <!-- Relay 1 (Cahaya/Lampu - Bawaan dari kode lo) -->
+        <div style="display:flex;align-items:center;gap:20px;padding:16px 0;border-bottom:1px solid var(--border, #e2e8f0);">
           <div style="flex:1">
             <div style="font-weight:600;font-size:1rem;">Relay 1</div>
             <div class="muted" style="font-size:0.83rem;margin-top:2px;">Perangkat / Lampu</div>
@@ -148,6 +150,20 @@
             <span class="relay-slider"></span>
           </label>
         </div>
+
+        <!-- Relay 2 (Kipas - Yang ditambahkan) -->
+        <div style="display:flex;align-items:center;gap:20px;padding:16px 0;">
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:1rem;">Relay 2</div>
+            <div class="muted" style="font-size:0.83rem;margin-top:2px;">Kipas / Fan</div>
+          </div>
+          <span id="relayLabel2" style="font-size:0.9rem;min-width:40px;">OFF</span>
+          <label class="relay-switch" title="Toggle Relay 2">
+            <input type="checkbox" id="relayToggle2" />
+            <span class="relay-slider"></span>
+          </label>
+        </div>
+
         <div id="relayStatus" style="font-size:0.82rem;color:var(--muted);padding-bottom:4px;">Status: Memuat...</div>
       </section>
 
@@ -170,6 +186,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCojGV-s1usz0iRIDuBw25pBOKqcDNPrRs",
@@ -182,9 +199,42 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app); // Nambah koneksi Database
 
     window.__sensorData = { suhu: [], cahaya: [], labels: [] };
 
+    // === Elemen DOM Relay ===
+    const relayToggle1 = document.getElementById("relayToggle");
+    const relayLabel1  = document.getElementById("relayLabel");
+    const relayToggle2 = document.getElementById("relayToggle2");
+    const relayLabel2  = document.getElementById("relayLabel2");
+    const relayStatus  = document.getElementById("relayStatus");
+
+    // === Fungsi kirim status ke Firebase ===
+    function setRelay(path, value) {
+      set(ref(db, path), value)
+        .then(() => console.log(`✅ ${path} → ${value}`))
+        .catch((err) => {
+          console.error(`❌ Gagal set ${path}:`, err);
+          relayStatus.textContent = "Status: Gagal kirim ke Firebase";
+        });
+    }
+
+    // === Event Listener Relay 1 (Cahaya/Lampu) ===
+    relayToggle1.addEventListener("change", () => {
+      const on = relayToggle1.checked;
+      relayLabel1.textContent = on ? "ON" : "OFF";
+      setRelay("relay/relay1", on ? 1 : 0);
+    });
+
+    // === Event Listener Relay 2 (Kipas) ===
+    relayToggle2.addEventListener("change", () => {
+      const on = relayToggle2.checked;
+      relayLabel2.textContent = on ? "ON" : "OFF";
+      setRelay("relay/relay2", on ? 1 : 0);
+    });
+
+    // === Cek Auth ===
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -216,7 +266,27 @@
       document.getElementById("statCahaya").textContent = "450 lx";
       document.getElementById("trendCahaya").textContent = "↓ Redup";
       
-      document.getElementById("relayStatus").textContent = "Status: Terhubung ke Firebase";
+      // Sinkronisasi Relay 1 dari Firebase (kalau ESP32 yang nyalain, web ikut berubah)
+      onValue(ref(db, "relay/relay1"), (snap) => {
+        const val = snap.val();
+        if (val !== null) {
+          const isOn = val === 1 || val === true;
+          relayToggle1.checked = isOn;
+          relayLabel1.textContent = isOn ? "ON" : "OFF";
+        }
+      });
+
+      // Sinkronisasi Relay 2 dari Firebase
+      onValue(ref(db, "relay/relay2"), (snap) => {
+        const val = snap.val();
+        if (val !== null) {
+          const isOn = val === 1 || val === true;
+          relayToggle2.checked = isOn;
+          relayLabel2.textContent = isOn ? "ON" : "OFF";
+        }
+      });
+
+      relayStatus.textContent = "Status: Terhubung ke Firebase";
     }
   </script>
 
